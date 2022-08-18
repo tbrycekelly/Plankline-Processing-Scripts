@@ -1,6 +1,6 @@
 library(data.table)
 library(archive)
-source('Desktop/Plankline Processing Scripts/scripts.R')
+source('R/scripts.R')
 
 
 #### Project preparation and parameter setting
