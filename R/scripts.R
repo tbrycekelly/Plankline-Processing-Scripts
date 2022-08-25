@@ -84,11 +84,92 @@ load.measurements = function(file.path, verbose = T) {
 }
 
 
+pad.number = function(x, pad = 4) {
+  x = as.numeric(x)
+  out = rep(NA, length(x))
+  
+  for (i in 1:length(x)) {
+    dn = max(pad - nchar(x[i]), 0)
+    out[i] = paste0(paste0(rep(0, dn), collapse = ''), x[i])
+  }
+  
+  ## Return
+  out
+}
 
 
 
+group = function(bin, pattern = '*', fun = function(x){sum(x, na.rm = T)}, verbose = T) {
+  l = grep(pattern = pattern, x = colnames(bin))
+  
+  ## No matches, return NA
+  if (length(l) < 1) {
+    return (rep(NA, nrow(bin)))
+  }
+  
+  if (verbose) {
+    message('Applying function to ', length(l), ' columns:\n', paste0('\t', c(1:length(l)), ') ', colnames(bin)[l], collapse = '\n'))
+  }
+  
+  ## Calculate sum, mean, etc.
+  apply(bin[,l], 1, fun)
+}
 
 
 
+pull = function(project.dir, pattern = '*', out.dir = NULL, extract = F) {
+  
+  ## Setup output folder for image files
+  if (is.null(out.dir)) {
+    out.dir = paste0(project.dir, '/tmp/')
+    if (!dir.exists(out.dir)) { dir.create(out.dir)}
+    message('No output directory given, saving to: ', out.dir)
+  }
+  
+  count = 0
+  a = Sys.time() # Timer
+  
+  ## Load each classification file, identify target files, extract if desired
+  class.files = list.files(paste0(project.dir, '/R/classification/'), pattern = '.rds', full.names = T)
+  
+  for (i in 1:length(class.files)) {
+    message('Searching for matches in file ', i, ' of ', length(class.files), '... ', appendLF = F)
+    
+    class = readRDS(class.files[i])
+    class = class[grep(class$class, pattern = pattern),]
+    
+    if (nrow(class) > 0) {
+      message('Found \t', nrow(class), ' matches.', appendLF = F)
+      count = count + nrow(class)
+      
+      if (extract) {
+        tar.name = paste0(project.dir, '/segmentation/', class$image[1], '.tar.gz')
+        
+        if (file.exists(tar.name)) {
+          class$path = paste0('./segmentation/',
+                              class$image,
+                              '/', class$image, '_', pad.number(class$frame, 4),
+                              '/corrected_crop/',
+                              class$image, '_', pad.number(class$frame, 4), '_crop_', pad.number(class$roi), '.png')
+          
+          #for (k in 1:nrow(class)) {
+          #  cmd = paste0('tar -zxvf ', tar.name,' ', class$path[k], ' -C ', out.dir, ' --strip-components=4')
+          #  temp = system(cmd, intern = T)
+          #}
+          archive::archive_extract(archive = tar.name, dir = out.dir, files = class$path)
+          message('Copy complete.')
+        } else {
+          message('No archive file found!')
+        }
+      } else{
+        message()
+      }
+    } else {
+      message('No targets found.')
+    }
+    
+  }
+  message('Found ', count, ' valid files (in ', round(as.numeric(difftime(Sys.time(), a, units = 'secs'))), ' seconds).')
+}
 
 

@@ -5,13 +5,10 @@ source('R/scripts.R')
 
 #### Project preparation and parameter setting
 
-base.dir = '/media/plankline/Data/Data/2022-07-22_17-18-24.796/'
+#base.dir = '/media/plankline/Data/Data/2022-07-22_17-18-24.796/'
+base.dir = '/media/plankline/Data/Data/2022-07-21_23-26-04.102/'
 out.dir = paste0(base.dir, 'R/')
 if (!dir.exists(out.dir)) { dir.create(out.dir)}
-
-frame.rate = 20.5
-bin.width = 2 # second(s)
-p.threshold = 0.8 # probability threshold
 
 
 #### Classification files
