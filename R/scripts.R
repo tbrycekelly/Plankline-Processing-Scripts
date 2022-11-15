@@ -106,6 +106,9 @@ group = function(bin, pattern = '*', fun = function(x){sum(x, na.rm = T)}, verbo
   if (length(l) < 1) {
     return (rep(NA, nrow(bin)))
   }
+  if (length(l) == 1) {
+    return(bin[,l])
+  }
   
   if (verbose) {
     message('Applying function to ', length(l), ' columns:\n', paste0('\t', c(1:length(l)), ') ', colnames(bin)[l], collapse = '\n'))

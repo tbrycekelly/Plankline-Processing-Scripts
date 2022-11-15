@@ -1,10 +1,11 @@
 library(TheSource)
 source('R/scripts.R')
 
-base.dir = '/media/plankline/Data/Data/2022-07-22_17-18-24.796/'
+base.dir = '/media/plankline/Data/Data/2022-07-21_23-26-04.102/'
 #sensor = readRDS('/media/plankline/Data/Sensor/Transect 2022-07-22 022347.RDS')
 sensor = readRDS('/mnt/shuttle/Publish/Transect 2022-07-22 022347.RDS')
 
+sensor$Time = sensor$Time - 3600 * 8
 
 
 #### Compile merged classification/sensor package dataset
