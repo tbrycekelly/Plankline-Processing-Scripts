@@ -1,7 +1,7 @@
 library(TheSource)
 source('R/scripts.R')
 
-base.dir = '/media/plankline/Data/Data/2022-07-21_23-26-04.102/'
+base.dir = '/media/plankline/Data/Data/2022-07-22_13-39-05.044/'
 #sensor = readRDS('/media/plankline/Data/Sensor/Transect 2022-07-22 022347.RDS')
 sensor = readRDS('/mnt/shuttle/Publish/Transect 2022-07-22 022347.RDS')
 
@@ -128,35 +128,57 @@ plot(x = comp$time,
      yaxs = 'i')
 
 
+## Start preliminary plot
+groups = sapply(strsplit(colnames(comp), split = '_'), function(x) {paste0(x[1], '_')})
+groups = unique(groups)
 
-section = build.section(x = comp$time,
-                        y = comp$Depth,
-                        z = data.frame(copepod = group(comp, 'copepod_'),
-                                       detritus = group(comp, 'detritus_'),
-                                       temperature = comp$Temperature,
-                                       salinity = comp$Salinity,
-                                       chl = comp$Chl, 
-                                       oxy = comp$Oxygen),
-                        lat = comp$Latitude,
-                        lon = comp$Longitude, x.factor = 10)
+colnames(comp) = paste0(colnames(comp), '_')
+comp.reduced = data.frame(time = comp$time_)
 
-plot.section(section, ylim = c(120,0), pal = 'parula', zlim = c(0, 50), xaxt = 'n', ylab = 'Depth (m)', xlab = '')
-axis.POSIXct(1, comp$time)
-add.section.contour(section, field = 'z3', col = 'red')
-add.section.contour(section, field = 'z4', col = 'light blue')
-add.section.contour(section, field = 'z5', col = 'green')
-add.section.contour(section, field = 'z6')
-mtext('Copepod_', adj = 0)
-
-plot.section(section, field = 'z2', ylim = c(120,0), pal = 'parula', zlim = c(0, 50), xaxt = 'n', ylab = 'Depth (m)', xlab = '')
-axis.POSIXct(1, comp$time)
-#add.section.contour(section, field = 'z2')
-add.section.contour(section, field = 'z3', col = 'red')
-add.section.contour(section, field = 'z4', col = 'light blue')
-add.section.contour(section, field = 'z5', col = 'green')
-add.section.contour(section, field = 'z6')
+for (g in groups) {
+  comp.reduced[[g]] = group(comp, pattern = g, verbose = F)
+}
 
 
+section = build.section(x = comp.reduced$time_,
+                        y = comp.reduced$Depth_,
+                        z = comp.reduced,
+                        lat = comp.reduced$Latitude_,
+                        lon = comp.reduced$Longitude_,
+                        y.factor = 0.5,
+                        neighborhood = 10,
+                        uncertainty = 2,
+                        nx = 200,
+                        ny = 200,
+                        ylim = c(5,100),
+                        xlim = as.numeric(range(comp.reduced$time)),
+                        field.names = colnames(comp.reduced))
+
+
+pdf(paste0(base.dir, '/R/Preliminary Sections.pdf'))
+par(mfrow = c(2,2))
+for (i in 3:ncol(section$grid)) {
+  
+  plot.section(section,
+               field = i,
+               ylim = c(100,0),
+               pal = 'parula',
+               zlim = range(pretty(quantile(section$grid[[i]], probs = c(0.02, 0.98), na.rm = T))),
+               xaxt = 'n',
+               ylab = 'Depth (m)',
+               xlab = '')
+  
+  axis.POSIXct(1, comp.reduced$time)
+  add.section.contour(section, field = 'Temperature_', col = 'red')
+  mtext(colnames(section$grid)[i], adj = 0)
+}
+
+dev.off()
+
+
+
+
+pdf(paste0(base.dir, '/R/Section Map.pdf'))
 
 map = make.map.nga()
 add.map.points(map, lon = section$lon, lat = section$lat, col = 'dark red')
@@ -165,3 +187,5 @@ add.map.contour(map,
                 bathy.pacific$Lat,
                 z = bathy.pacific$Z,
                 levels = c(-100, -1000), col = 'grey')
+
+dev.off()

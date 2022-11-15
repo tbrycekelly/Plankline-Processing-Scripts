@@ -32,10 +32,10 @@ load.classifications = function(file, verbose = T) {
 
 
 
-load.measurements = function(file.path, verbose = T) {
+load.measurements.old = function(file.path, verbose = T) {
   ## Determine files in the given archive. Find the csv file
   files = as.data.frame(archive::archive(file.path))
-  l = which(grepl(files$path[1:10], pattern = '.csv'))
+  l = which(grepl(files$path, pattern = '.csv'))
   
   if (length(l) < 1) {
     message('No csv file found in ', file.path, '!!!')
@@ -44,6 +44,54 @@ load.measurements = function(file.path, verbose = T) {
   
   ## Load the csv file from inside the archive
   data = read.csv(archive::archive_read(archive = file.path, file = files$path[l]))
+  
+  ## setup final data structure and then populate with data
+  measurement.summary = data.frame(image = rep(NA, nrow(data)),
+                                   frame = NA,
+                                   roi = NA,
+                                   area = NA,
+                                   major = NA,
+                                   minor = NA,
+                                   perimeter = NA,
+                                   x = NA,
+                                   y = NA,
+                                   mean = NA,
+                                   height = NA)
+  
+  if (verbose) { message('Identifying image and frame... ', appendLF = F)}
+  temp = strsplit(data$image[1], split = '/|_')[[1]]
+  measurement.summary$image = paste(temp[length(temp)-4], temp[length(temp)-3], sep = '_')
+  
+  temp = strsplit(data$image, split = "\\.|_")
+  measurement.summary$frame = sapply(1:length(temp), function (x) { temp[[x]][length(temp[[x]])-3] })
+  measurement.summary$roi = sapply(1:length(temp), function (x) { temp[[x]][length(temp[[x]])-1] })
+  
+  measurement.summary$frame = as.numeric(measurement.summary$frame)
+  measurement.summary$roi = as.numeric(measurement.summary$roi)
+  
+  measurement.summary$area = data$area
+  measurement.summary$major = data$major
+  measurement.summary$minor = data$minor
+  measurement.summary$perimeter = data$perimeter
+  measurement.summary$x = data$x
+  measurement.summary$y = data$y
+  measurement.summary$mean = data$mean
+  measurement.summary$height = data$height
+  if (verbose) { message('Done.') }
+  
+  ## Return 
+  measurement.summary
+}
+
+load.measurements = function(file.path, verbose = T) {
+  
+  ## Get measurement file name
+  f = strsplit(file.path, '/')[[1]]
+  f = gsub(pattern = '.tar.gz', replacement = '.csv', f[length(f)])
+  f = paste0('./measurements/', f)
+  
+  ## Load the csv file from inside the archive
+  data = read.csv(archive::archive_read(archive = file.path, file = f))
   
   ## setup final data structure and then populate with data
   measurement.summary = data.frame(image = rep(NA, nrow(data)),
@@ -120,7 +168,7 @@ group = function(bin, pattern = '*', fun = function(x){sum(x, na.rm = T)}, verbo
 
 
 
-pull = function(project.dir, pattern = '*', out.dir = NULL, extract = F) {
+pull = function(project.dir, p = 0.5, out.dir = NULL, scratch = '/tmp/pull') {
   
   ## Setup output folder for image files
   if (is.null(out.dir)) {
@@ -129,50 +177,95 @@ pull = function(project.dir, pattern = '*', out.dir = NULL, extract = F) {
     message('No output directory given, saving to: ', out.dir)
   }
   
+  if (!dir.exists(scratch)) {
+    message('Creating scartch directory.')
+    dir.create(scratch)
+  } else {
+    stop('Scratch directory exists, must not exist for data protection! Dir = ', scratch)
+  }
+  
+  
   count = 0
   a = Sys.time() # Timer
   
   ## Load each classification file, identify target files, extract if desired
-  class.files = list.files(paste0(project.dir, '/R/classification/'), pattern = '.rds', full.names = T)
+  class.files = list.files(paste0(project.dir, '/classification/'), pattern = '.csv', full.names = T)
   
   for (i in 1:length(class.files)) {
-    message('Searching for matches in file ', i, ' of ', length(class.files), '... ', appendLF = F)
+    message('Reading csv ', i, ' of ', length(class.files), '...')
+    data = fread(class.files[i])
     
-    class = readRDS(class.files[i])
-    class = class[grep(class$class, pattern = pattern),]
+    message('Extracting TAR file to temporary directory...')
+    tar.file = gsub('.csv', '.tar', gsub('classification', 'segmentation', class.files[i]))
+    tar.file = strsplit(tar.file, '-')[[1]]
+    tar.file = paste0(paste0(tar.file[1:(length(tar.file)-3)], collapse = '-'), '.tar')
     
-    if (nrow(class) > 0) {
-      message('Found \t', nrow(class), ' matches.', appendLF = F)
-      count = count + nrow(class)
-      
-      if (extract) {
-        tar.name = paste0(project.dir, '/segmentation/', class$image[1], '.tar.gz')
-        
-        if (file.exists(tar.name)) {
-          class$path = paste0('./segmentation/',
-                              class$image,
-                              '/', class$image, '_', pad.number(class$frame, 4),
-                              '/corrected_crop/',
-                              class$image, '_', pad.number(class$frame, 4), '_crop_', pad.number(class$roi), '.png')
-          
-          #for (k in 1:nrow(class)) {
-          #  cmd = paste0('tar -zxvf ', tar.name,' ', class$path[k], ' -C ', out.dir, ' --strip-components=4')
-          #  temp = system(cmd, intern = T)
-          #}
-          archive::archive_extract(archive = tar.name, dir = out.dir, files = class$path)
-          message('Copy complete.')
-        } else {
-          message('No archive file found!')
-        }
-      } else{
-        message()
-      }
+    if (file.exists(tar.file)) {
+      system(paste0('tar -xf ', tar.file, ' -C ', scratch, ' --strip-components=4 --wildcards "*.png"'))
     } else {
-      message('No targets found.')
+      stop('No matching Tar file found!')
     }
     
+    paths = strsplit(data$image, '/')
+    for (taxa in colnames(data)[-1]) {
+      l = which(data[[taxa]] > p)
+      
+      if (length(l) > 0) {
+        if (!dir.exists(paste0(out.dir, '/', taxa))) {
+          dir.create(paste0(out.dir, '/', taxa))
+        }
+        
+        for (k in l) {
+          count = count + 1
+          file.copy(from = paste0(scratch, '/', paths[[k]][length(paths[[k]])]), to = paste0(out.dir, '/', taxa))
+          file.remove(paste0(scratch, '/', paths[[k]][length(paths[[k]])]))
+        }
+      }
+    }
+    
+    ## Copy over whatever files are left (unclassified objects)
+    if (!dir.exists(paste0(out.dir, '/_unsorted/'))) {dir.create(paste0(out.dir, '/_unsorted/'))}
+    orphan = list.files(scratch, pattern = '*.png', full.names = T)
+    file.copy(from = orphan, to = gsub(scratch, paste0(out.dir, '/_unsorted/'), orphan))
+    
+    file.remove(list.files(scratch, pattern = '*', full.names = T))
   }
+  
+  file.remove(scratch)
+  
+  
+  ## Make morphocluster index
+  images = list.files(path = out.dir, recursive = T, pattern = '*.png', full.names = F)
+  name = strsplit(images, split = '/')
+  index = data.frame(object_id = NA, path = images)
+  
+  for (i in 1:nrow(index)) {
+    index$object_id[i] = gsub('.png', '', name[[i]][length(name[[i]])])
+  }
+  
+  write.csv(index, file = paste0(out.dir, '/index.csv'), row.names = F)
+  
+  
+  ## Done
   message('Found ', count, ' valid files (in ', round(as.numeric(difftime(Sys.time(), a, units = 'secs'))), ' seconds).')
 }
+
+
+export.morpho = function() {
+  
+  ## Remove and create export file
+  message('To make the zip file: zip -FSr ../export.zip ./*')
+  
+  ## Copy to container
+  message('to Copy data to container: sudo docker cp /media/plankline/Data/Data/osu_test/export.zip morphocluster2_morphocluster_1:/data')
+  
+  ## activate docker
+  message('Log in: sudo docker-compose exec morphocluster bash')
+  message('First: . ./activate; cd /data')
+  
+  ## Run feature extraction
+  
+}
+
 
 
