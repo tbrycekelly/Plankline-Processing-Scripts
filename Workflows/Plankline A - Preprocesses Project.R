@@ -1,6 +1,7 @@
 library(data.table)
 library(archive)
-source('R/scripts.R')
+library(devtools)
+library(PlanklinePS)
 
 
 #### Project preparation and parameter setting

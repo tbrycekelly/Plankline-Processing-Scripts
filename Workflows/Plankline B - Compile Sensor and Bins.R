@@ -1,5 +1,8 @@
+library(data.table)
+library(archive)
+library(devtools)
+library(PlanklinePS)
 library(TheSource)
-source('R/scripts.R')
 
 base.dir = '/media/plankline/Data/Data/2022-07-22_13-39-05.044/'
 #sensor = readRDS('/media/plankline/Data/Sensor/Transect 2022-07-22 022347.RDS')

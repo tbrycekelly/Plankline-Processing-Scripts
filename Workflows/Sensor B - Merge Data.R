@@ -1,5 +1,6 @@
 library(openxlsx)
 library(geosphere) # for distance calculations
+library(PlanklinePS)
 
 gps = readRDS('_rdata/gps.rdata')
 ctd1 = readRDS('_rdata/ctd 1.rdata')

@@ -1,5 +1,9 @@
-devtools::install_github('tbrycekelly/TheSource')
+library(data.table)
+library(archive)
+library(devtools)
+library(PlanklinePS)
 library(TheSource)
+
 
 transects = readRDS('_rdata/transects.rdata')
 
