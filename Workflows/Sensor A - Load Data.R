@@ -192,4 +192,10 @@ acs = load.acs.files(acs.files)
 acs = cbind(Time = acs$Time, acs[,which(colnames(acs) != 'Time')])
 acs$V178 = NULL
 
+for (i in 2:ncol(acs)) { ## Insitu baseline correction
+  dd = quantile(acs[,i], na.rm = T, probs = 0.01)
+  message('In situ baseline of ', colnames(acs)[i], ' adjusted by ', round(dd*1e3) / 1e3)
+  acs[,i] = acs[,i] - dd
+}
+
 saveRDS(acs, file = paste0(directories$save, 'acs.rds'))

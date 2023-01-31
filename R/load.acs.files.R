@@ -16,9 +16,19 @@ load.acs.files = function(files, dt = 1, min.size = 1024, verboes = T) {
   
   ## Load in first file.
   message(' Attempting to load file 1... ', appendLF = F)
-  start.time = file.info(files[1])$ctime ## inital guess
+  stamp = strsplit(x = files[1], split = '/')[[1]]
+  stamp = stamp[length(stamp)]
+  stamp = strsplit(stamp, '_')[[1]]
+  stamp = gsub('.dat', '', stamp[length(stamp)])
+  start.time = make.time(year = substr(stamp, 1, 4),
+                         month = substr(stamp, 5, 6),
+                         day = substr(stamp, 7, 8),
+                         hour = substr(stamp, 9, 10),
+                         minute = substr(stamp, 11, 12),
+                         second = substr(stamp, 13, 14),
+                         tz = 'UTC')
   dat = as.data.frame(fread(files[1], skip = 99, verbose = F, showProgress = F))
-  dat$Time = dat$`Time(ms)`/1000 + start.time - max(dat$`Time(ms)`/1000)
+  dat$Time = (dat$`Time(ms)` - min(dat$`Time(ms)`))/1000 + start.time
   dat$`Time(ms)` = NULL
   message('Done.')
   
@@ -27,8 +37,19 @@ load.acs.files = function(files, dt = 1, min.size = 1024, verboes = T) {
     message(' Attempting to load file ', i, '... ', appendLF = F)
     temp = as.data.frame(fread(files[i], skip = 99, verbose = F, showProgress = F))
     
-    start.time = file.info(files[i])$ctime ## inital guess
-    temp$Time = temp$`Time(ms)`/1000 + start.time - max(temp$`Time(ms)`/1000)
+    ## Time
+    stamp = strsplit(x = files[i], split = '/')[[1]]
+    stamp = stamp[length(stamp)]
+    stamp = strsplit(stamp, '_')[[1]]
+    stamp = gsub('.dat', '', stamp[length(stamp)])
+    start.time = make.time(year = substr(stamp, 1, 4),
+                           month = substr(stamp, 5, 6),
+                           day = substr(stamp, 7, 8),
+                           hour = substr(stamp, 9, 10),
+                           minute = substr(stamp, 11, 12),
+                           second = substr(stamp, 13, 14),
+                           tz = 'UTC')
+    temp$Time = (temp$`Time(ms)` - min(temp$`Time(ms)`))/1000 + start.time
     temp$`Time(ms)` = NULL
     
     if (ncol(temp) != ncol(dat)) {

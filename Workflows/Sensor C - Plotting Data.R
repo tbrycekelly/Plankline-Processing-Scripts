@@ -5,6 +5,7 @@ library(PlanklinePS)
 library(TheSource)
 
 ## Setup
+save.dir = '/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/'
 transects = readRDS('/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/transects.rdata')
 
 #### MAPS
@@ -58,7 +59,7 @@ dev.off()
 section = list()
 
 for (i in 1:length(transects)) {
-  message(i)
+  message('Building section ', i, ' of ', length(transects), '...')
   fields = names(transects[[i]])
   fields = fields[!fields %in% c('Distance', 'Depth')]
   section[[i]] = build.section(x = transects[[i]]$Distance,
@@ -66,17 +67,26 @@ for (i in 1:length(transects)) {
                                z = transects[[i]][,fields],
                                field.names = fields,
                                ylim = c(0,100),
-                               nx = 50,
+                               nx = 100,
                                ny = 100,
                                y.factor = 10,
-                               uncertainty = 10,
+                               uncertainty = 1,
                                neighborhood = 20,
                                lat = transects[[i]]$Latitude,
                                lon = transects[[i]]$Longitude,
-                               gridder = gridBin,
+                               gridder = gridODV,
                                verbose = F)
+  
+  ## Derived sections (dz)
+  #section[[i]]$grid$dSigmadz = NA
+  
 }
 
+#### Save Data
+saveRDS(section, file = paste0(save.dir, 'section.rdata'))
+
+
+#### Plot Section Summaries
 
 add.section.bathy = function(section, bathy = bathy.global, binning = 1, bathy.col = 'darkgrey') {
   
