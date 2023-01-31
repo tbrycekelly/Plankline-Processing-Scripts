@@ -4,32 +4,54 @@ library(devtools)
 library(PlanklinePS)
 library(TheSource)
 
-
-transects = readRDS('_rdata/transects.rdata')
+## Setup
+transects = readRDS('/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/transects.rdata')
 
 #### MAPS
 
 ## CRP
+pdf(paste0(save.dir, 'SKQ202210S Maps.pdf'))
 map = make.map2(coast = 'coastline4',
-                lon = -145,
-                lat = 60,
-                scale = 100,
+                lon = -147,
+                lat = 59.5,
+                scale = 200,
                 p = make.proj('nsper', lat= 50, lon = -145),
-                dlon = 1,
-                dlat = 1,
+                dlon = 2,
+                dlat = 2,
                 land.col = 'black')
 
 for (i in 1:length(transects)) {
-  add.map.line(map, lon = transects[[i]]$Longitude, transects[[i]]$Latitude, greatCircle = F, col = pals::alphabet(8)[i], lwd = 5)
+  col = pals::alphabet(length(transects))[i]
+  add.map.line(map, lon = transects[[i]]$Longitude, transects[[i]]$Latitude, greatCircle = F, col = col, lwd = 5)
   add.map.text(map,
                text = i,
                lon = mean(transects[[i]]$Longitude, na.rm = T),
                lat = mean(transects[[i]]$Latitude, na.rm = T),
                pos = 2,
-               col = 'blue')
+               col = col)
 }
 
 
+for (i in 1:length(transects)) {
+  map = make.map2(coast = 'coastline3',
+                  lon = -147,
+                  lat = 59.5,
+                  scale = 200,
+                  p = make.proj('nsper', lat= 50, lon = -145),
+                  dlon = 2,
+                  dlat = 2,
+                  land.col = 'black')
+  
+  col = pals::alphabet(length(transects))[i]
+  add.map.line(map, lon = transects[[i]]$Longitude, transects[[i]]$Latitude, greatCircle = F, col = col, lwd = 5)
+  add.map.text(map,
+                text = i,
+                lon = mean(transects[[i]]$Longitude, na.rm = T),
+                lat = mean(transects[[i]]$Latitude, na.rm = T),
+                pos = 2,
+                col = col)
+}
+dev.off()
 
 #### Build SECTIONS
 
@@ -56,54 +78,6 @@ for (i in 1:length(transects)) {
 }
 
 
-pdf('Figures/SKQ202210S Section Plots (transect 1).pdf')
-par(mfrow = c(2,1))
-for (n in 1:ncol(section[[1]]$grid)) {
-  message(n)
-  plot.section(section[[1]], field = n,
-               pal = 'inferno',
-               ylim = c(100,0),
-               mark.points = F,
-               include.cex = 0.2,
-               ylab = 'Depth',
-               xlab = 'Section Distance',
-               main = paste0('Transect 1 - ', names(section[[1]]$grid)[n]))
-  
-  add.section.bathy(section[[1]])
-}
-
-dev.off()
-
-
-pdf('Figures/SKQ202210S Section Plots (transect 2).pdf')
-par(mfrow = c(2,1))
-for (n in 1:ncol(section[[2]]$grid)) {
-  message(n)
-  plot.section(section[[2]], field = n,
-               pal = 'inferno',
-               ylim = c(100,0),
-               mark.points = F,
-               include.cex = 0.2,
-               ylab = 'Depth',
-               xlab = 'Section Distance',
-               main = paste0('Transect 2 - ', names(section[[2]]$grid)[n]))
-}
-
-dev.off()
-
-
-
-
-## map if
-map = make.map('coastlineWorldFine', lon.min = -150, lon.max = -145, lat.min = 57.8, lat.max = 60.3,
-               dlon = 1, dlat = 1, land.col = '#333333')
-#add.map.bathy.shade(map, bathy.global, pal = 'ocean.deep', zlim = c(-5e3, -100))
-#redraw.map(map)
-add.map.points(gps$Longitude, gps$Latitude)
-
-
-
-
 add.section.bathy = function(section, bathy = bathy.global, binning = 1, bathy.col = 'darkgrey') {
   
   
@@ -121,3 +95,26 @@ add.section.bathy = function(section, bathy = bathy.global, binning = 1, bathy.c
   ## Draw polygon
   polygon(x = c(section$x, rev(section$x)), y = c(depth, rep(1e8, length(section$x))), col = bathy.col)
 }
+
+
+for (i in 1:length(transects)) {
+  pdf(paste0(save.dir, 'SKQ202210S Section Plots (transect ', i,').pdf'))
+  par(mfrow = c(2,1))
+  for (n in 1:ncol(section[[i]]$grid)) {
+    message(n)
+    plot.section(section[[i]], field = n,
+                 pal = 'inferno',
+                 ylim = c(100,0),
+                 mark.points = F,
+                 include.cex = 0.2,
+                 ylab = 'Depth',
+                 xlab = 'Section Distance',
+                 main = paste0('Transect ', i, ' - ', names(section[[i]]$grid)[n]))
+    
+    #add.section.bathy(section[[i]])
+  }
+  
+  dev.off()
+}
+
+

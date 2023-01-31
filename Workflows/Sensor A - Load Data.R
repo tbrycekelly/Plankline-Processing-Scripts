@@ -4,8 +4,35 @@ library(TheSource)
 library(PlanklinePS)
 
 
+## Setup
+root.dir = '/media/plankline/Data/Sensor/SKQJ2022_data/'
+
+## Default directories
+directories = list(
+  root = root.dir,
+  gps = paste0(root.dir, 'VIPF_LOGS/GPS Publisher/'),
+  ctd1 = paste0(root.dir, 'VIPF_LOGS/CTD 1 Publisher/'),
+  ctd2 = paste0(root.dir, 'VIPF_LOGS/CTD 2 Publisher/'),
+  ad = paste0(root.dir, 'VIPF_LOGS/AD1216 Publisher/'),
+  fl1 = paste0(root.dir, 'VIPF_LOGS/Fluorometer 1 Publisher/'),
+  fl2 = paste0(root.dir, 'VIPF_LOGS/Fluorometer 2 Publisher/'),
+  eng = paste0(root.dir, 'VIPF_LOGS/Inclinometer Publisher/'),
+  lisst = paste0(root.dir, 'LISST/'),
+  acs = paste0(root.dir, 'ACS/'),
+  save = paste0(root.dir, '/_rdata/')
+)
+
+if (!dir.exists(directories$root)) {stop('Root directory not found. Aborting!')}
+
+for (i in 2:length(directories)) {
+  if (!dir.exists(directories[[i]])) {
+    message('Creating missing directory: ', directories[[i]])
+    dir.create(directories[[i]])
+  }
+}
+
 ### GPS Files
-gps.files = list.files('S:/SKQJ2022_data/VIPF_LOGS/GPS Publisher/',
+gps.files = list.files(path = directories$gps,
                        full.names = T,
                        recursive = T,
                        pattern = '*.csv')
@@ -21,13 +48,14 @@ gps$Longitude = -1 * (floor(gps$Longitude/100) + (gps$Longitude - floor(gps$Long
 gps = gps[,c(1,4,6)]
 
 gps = gps[gps$Time > make.time(2022, 6),]
-saveRDS(gps, file = '_rdata/gps.rdata')
+
+saveRDS(gps, file = paste0(directories$save, 'gps.rds'))
 
 
 
 #### CTD 1
 ## Initial setup
-ctd.files = list.files('S:/SKQJ2022_data/VIPF_LOGS/CTD 1 Publisher/',
+ctd.files = list.files(directories$ctd1,
                        full.names = T,
                        pattern = '*.csv',
                        recursive = T)
@@ -41,12 +69,16 @@ colnames(ctd) = c('Time', 'Temperature', 'Conductivity', 'Pressure', 'Depth', 'S
 ctd$SigmaTheta = calc.sigma.theta(S = ctd$Salinity, Tmp = ctd$Temperature, P = ctd$Pressure, verbose = F)
 
 ctd = ctd[ctd$Time > make.time(2022, 6),]
-saveRDS(ctd, file = '_rdata/ctd 1.rdata')
+saveRDS(ctd, file = paste0(directories$save, 'ctd1.rds'))
 
 
 #### CTD 2
 ## Initial setup
-ctd.files = list.files('S:/SKQJ2022_data/VIPF_LOGS/CTD 2 Publisher/', full.names = T, pattern = '*.csv', recursive = T)
+ctd.files = list.files(directories$ctd2,
+                       full.names = T,
+                       pattern = '*.csv',
+                       recursive = T)
+
 ctd = load.dpi.files(ctd.files)
 ctd = ctd[ctd$Time > make.time(2020, 6),]
 
@@ -55,24 +87,27 @@ colnames(ctd) = c('Time', 'Temperature2', 'Conductivity2', 'Pressure2', 'Depth2'
 ## Calculate
 ctd$SigmaTheta2 = calc.sigma.theta(S = ctd$Salinity2, Tmp = ctd$Temperature2, P = ctd$Pressure2, verbose = F)
 
-saveRDS(ctd, file = '_rdata/ctd 2.rdata')
+saveRDS(ctd, file = paste0(directories$save, 'ctd2.rds'))
 
 
 
 #### Analog
 ## Set up format
-ad.files = list.files('S:/SKQJ2022_data/VIPF_LOGS/AD1216 Publisher/', full.names = T, pattern = '.csv', recursive = T)
+ad.files = list.files(directories$ad,
+                      full.names = T,
+                      pattern = '.csv',
+                      recursive = T)
+
 ad = load.dpi.files(ad.files)
 
 colnames(ad) = c('Time', 'Oxygen', 'PAR', 'pH', 'REDOX', 'Checksum', 'checksum2')
 
 ad = ad[ad$Time > make.time(2022, 6),]
-saveRDS(ad, file = '_rdata/analog.rdata')
-
+saveRDS(ad, file = paste0(directories$save, 'analog.rds'))
 
 
 #### Fluorometer 1
-fl.files = list.files('S:/SKQJ2022_data/VIPF_LOGS/Fluorometer 1 Publisher/',
+fl.files = list.files(directories$fl1,
                       full.names = T,
                       recursive = T, 
                       pattern = '*.csv')
@@ -92,13 +127,11 @@ fl$FDOM = (fl$FDOM - 50) * 0.0914
 fl$Phycocyanin = (fl$Phycocyanin - 46) * 0.0422
 
 fl = fl[fl$Time > make.time(2022, 6),]
-saveRDS(fl, file = '_rdata/fluorometer 1.rdata')
-
-
+saveRDS(fl, file = paste0(directories$save, 'fluorometer1.rds'))
 
 
 #### Fluorometer 2
-fl.files = list.files('S:/SKQJ2022_data/VIPF_LOGS/Fluorometer 2 Publisher/',
+fl.files = list.files(directories$fl2,
                       full.names = T,
                       recursive = T,
                       pattern = '*.csv')
@@ -118,12 +151,12 @@ fl$S532 = (fl$S532 - 50) * 0.000008216
 fl$S650 = (fl$S650 - 50) * 0.00000411
 
 fl = fl[fl$Time > make.time(2022, 6),]
-saveRDS(fl, file = '_rdata/fluorometer 2.rdata')
+saveRDS(fl, file = paste0(directories$save, 'fluorometer2.rds'))
 
 
 
 #### Eng
-eng.files = list.files('S:/SKQJ2022_data/VIPF_LOGS/Inclinometer Publisher/',
+eng.files = list.files(directories$eng,
                        full.names = T,
                        pattern = '*.csv',
                        recursive = T)
@@ -132,8 +165,31 @@ eng = load.dpi.files(eng.files)
 
 colnames(eng) = c('Time', 'AccelerationX', 'AccelerationY', 'AccelerationZ', 'Roll', 'Pitch', 'T')
 eng = eng[eng$Time > make.time(2022, 6),]
-saveRDS(eng, file = '_rdata/engineering.rdata')
+saveRDS(eng, file = paste0(directories$save, 'engineering.rds'))
 
 
 
+#### LISST
+# TODO: timestamps are not right!
+lisst.files = list.files(directories$lisst,
+                         full.names = T,
+                         pattern = '*_rs.csv',
+                         recursive = T)
+lisst = load.lisst.files(lisst.files)
 
+saveRDS(lisst, file = paste0(directories$save, 'lisst.rds'))
+
+
+
+#### ACs
+# TODO: timestamps are not right!
+acs.files = list.files(directories$acs,
+                       full.names = T,
+                       pattern = '*.dat',
+                       recursive = T)
+acs = load.acs.files(acs.files)
+
+acs = cbind(Time = acs$Time, acs[,which(colnames(acs) != 'Time')])
+acs$V178 = NULL
+
+saveRDS(acs, file = paste0(directories$save, 'acs.rds'))

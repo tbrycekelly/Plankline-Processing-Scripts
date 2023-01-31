@@ -2,13 +2,16 @@ library(openxlsx)
 library(geosphere) # for distance calculations
 library(PlanklinePS)
 
-gps = readRDS('_rdata/gps.rdata')
-ctd1 = readRDS('_rdata/ctd 1.rdata')
-ctd2 = readRDS('_rdata/ctd 2.rdata')
-#eng = readRDS('_rdata/engineering ')
-fluoro1 = readRDS('_rdata/fluorometer 1.rdata')
-fluoro2 = readRDS('_rdata/fluorometer 2.rdata')
-analog = readRDS('_rdata/analog.rdata')
+## Setup
+save.dir = '/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/'
+
+gps = readRDS(paste0(save.dir, 'gps.rds'))
+ctd1 = readRDS(paste0(save.dir, 'ctd1.rds'))
+ctd2 = readRDS(paste0(save.dir, 'ctd2.rds'))
+#eng = readRDS(paste0(save.dir, 'engineering.rds'))
+fluoro1 = readRDS(paste0(save.dir, 'fluorometer1.rds'))
+fluoro2 = readRDS(paste0(save.dir, 'fluorometer2.rds'))
+analog = readRDS(paste0(save.dir, 'analog.rds'))
 
 
 ## bin time
@@ -59,6 +62,11 @@ for (n in names(fluoro2)[c(3,5,7)]) {
 #  dpi[[n]] = approx(as.numeric(eng$Time), eng[[n]], xout = as.numeric(dpi$Time), ties = mean)$y
 #}
 
+## ACs
+dpi[['a440']] = approx(as.numeric(acs$Time), acs$A440, xout = as.numeric(dpi$Time), ties = mean)$y
+dpi[['a675']] = approx(as.numeric(acs$Time), acs$A675.8, xout = as.numeric(dpi$Time), ties = mean)$y
+
+
 
 #### Filter
 dpi = dpi[dpi$Pressure > 2,]
@@ -84,11 +92,6 @@ for (i in 2:length(k)) {
   
 }
 
-saveRDS(transects, file = '_rdata/transects.rdata')
-saveRDS(dpi, file = '_rdata/dpi.rdata')
+saveRDS(transects, file = paste0(save.dir, 'transects.rdata'))
+saveRDS(dpi, file = paste0(save.dir, 'dpi.rdata'))
 
-for (i in 1:length(transects)) {
-  #write.xlsx(transects[[i]], file = paste0('Publish/Transect ', gsub(':', '', transects[[i]]$Time[1]), '.xlsx'))
-  write.xlsx(transects[[i]], file = paste0('S:/Publish/Transect ', gsub(':', '', transects[[i]]$Time[1]), '.xlsx'))
-  saveRDS(transects[[i]], file = paste0('S:/Publish/Transect ', gsub(':', '', transects[[i]]$Time[1]), '.RDS'))
-}

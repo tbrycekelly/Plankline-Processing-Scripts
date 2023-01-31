@@ -1,5 +1,5 @@
 #' @export
-load.dpi.files = function(files, skip = 1, min.size = 1024, verbose = T) {
+load.lisst.files = function(files, min.size = 1024, verbose = T) {
   message('Starting to load in files, ', length(files), ' files specified.')
   
   file = data.frame(files = files, keep = T)
@@ -16,13 +16,13 @@ load.dpi.files = function(files, skip = 1, min.size = 1024, verbose = T) {
   
   ## Load in first file.
   message(' Attempting to load file 1... ', appendLF = F)
-  dat = fread(files[1], skip = skip, fill = T)
+  dat = fread(files[1], fill = T, verbose = F, showProgress = F)
   message('Done.')
   
   ## Read in rest of data
   for (i in 2:length(files)) {
     message(' Attempting to load file ', i, '... ', appendLF = F)
-    temp = fread(files[i], skip = skip, fill = T, verbose = F, showProgress = F)
+    temp = fread(files[i], fill = T, verbose = F, showProgress = F)
     
     if (ncol(temp) != ncol(dat)) {
       message('Invalid number of columns (', ncol(temp), ' vs ', ncol(dat), '), skipping.')
@@ -33,10 +33,26 @@ load.dpi.files = function(files, skip = 1, min.size = 1024, verbose = T) {
   }
   
   message(' Setting up datetimes and ordering files.')
-  colnames(dat)[1] = 'Time'
+  
+  colnames(dat) = c(paste0('VC', 1:36),
+                    'Laser.mW',
+                    'Voltage',
+                    'Analog.1',
+                    'Laser.Ref',
+                    'Depth',
+                    'Temperature',
+                    'Year', 'Month', 'Day', 'Hour', 'Minute', 'Seconds',
+                    'Analog.2',
+                    'Mean.Diameter', 'PPM',
+                    'Humidity',
+                    'X', 'Y', 'Z',
+                    'Raw.Pressure.1', 'Raw.Pressure.2',
+                    'Light',
+                    'Analog.3',
+                    'Transmission', 'Attenuation')
   
   ## Make and sort by time
-  dat$Time = as.POSIXct(dat$Time, origin = make.time(1904))
+  dat$Time = make.time(dat$Year, dat$Month, dat$Day, dat$Hour, dat$Minute, dat$Seconds, tz = 'GMT')
   dat = dat[order(dat$Time),]
   
   message('Finished.')
