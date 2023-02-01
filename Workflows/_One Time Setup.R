@@ -7,5 +7,6 @@ devtools::install_github('tbrycekelly/Plankline-Processing-Scripts')
 devtools::install_github('tbrycekelly/TheSource')
 
 
+# test that the new packages load:
 library(TheSource)
 library(PlanklinePS)
