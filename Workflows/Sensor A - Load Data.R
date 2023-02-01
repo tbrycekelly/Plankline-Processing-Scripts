@@ -47,7 +47,7 @@ gps$Latitude = floor(gps$Latitude/100) + (gps$Latitude - floor(gps$Latitude/100)
 gps$Longitude = -1 * (floor(gps$Longitude/100) + (gps$Longitude - floor(gps$Longitude/100)*100)/60)
 gps = gps[,c(1,4,6)]
 
-gps = gps[gps$Time > make.time(2022, 6),]
+gps = gps[gps$Time > make.time(2000),]
 
 saveRDS(gps, file = paste0(directories$save, 'gps.rds'))
 
@@ -68,7 +68,7 @@ colnames(ctd) = c('Time', 'Temperature', 'Conductivity', 'Pressure', 'Depth', 'S
 ## Calculate
 ctd$SigmaTheta = calc.sigma.theta(S = ctd$Salinity, Tmp = ctd$Temperature, P = ctd$Pressure, verbose = F)
 
-ctd = ctd[ctd$Time > make.time(2022, 6),]
+ctd = ctd[ctd$Time > make.time(2000),]
 saveRDS(ctd, file = paste0(directories$save, 'ctd1.rds'))
 
 
@@ -80,7 +80,7 @@ ctd.files = list.files(directories$ctd2,
                        recursive = T)
 
 ctd = load.dpi.files(ctd.files)
-ctd = ctd[ctd$Time > make.time(2020, 6),]
+ctd = ctd[ctd$Time > make.time(2000),]
 
 colnames(ctd) = c('Time', 'Temperature2', 'Conductivity2', 'Pressure2', 'Depth2', 'Salinity2', 'Sound.Velocity2')
 
@@ -102,7 +102,7 @@ ad = load.dpi.files(ad.files)
 
 colnames(ad) = c('Time', 'Oxygen', 'PAR', 'pH', 'REDOX', 'Checksum', 'checksum2')
 
-ad = ad[ad$Time > make.time(2022, 6),]
+ad = ad[ad$Time > make.time(2000),]
 saveRDS(ad, file = paste0(directories$save, 'analog.rds'))
 
 
@@ -126,7 +126,7 @@ fl$Chl = (fl$Chl - 49) * 0.0121
 fl$FDOM = (fl$FDOM - 50) * 0.0914
 fl$Phycocyanin = (fl$Phycocyanin - 46) * 0.0422
 
-fl = fl[fl$Time > make.time(2022, 6),]
+fl = fl[fl$Time > make.time(2000),]
 saveRDS(fl, file = paste0(directories$save, 'fluorometer1.rds'))
 
 
@@ -150,7 +150,7 @@ fl$S470 = (fl$S470 - 35) * 0.00001181
 fl$S532 = (fl$S532 - 50) * 0.000008216
 fl$S650 = (fl$S650 - 50) * 0.00000411
 
-fl = fl[fl$Time > make.time(2022, 6),]
+fl = fl[fl$Time > make.time(2000),]
 saveRDS(fl, file = paste0(directories$save, 'fluorometer2.rds'))
 
 
@@ -164,7 +164,7 @@ eng.files = list.files(directories$eng,
 eng = load.dpi.files(eng.files)
 
 colnames(eng) = c('Time', 'AccelerationX', 'AccelerationY', 'AccelerationZ', 'Roll', 'Pitch', 'T')
-eng = eng[eng$Time > make.time(2022, 6),]
+eng = eng[eng$Time > make.time(2000),]
 saveRDS(eng, file = paste0(directories$save, 'engineering.rds'))
 
 
@@ -182,7 +182,6 @@ saveRDS(lisst, file = paste0(directories$save, 'lisst.rds'))
 
 
 #### ACs
-# TODO: timestamps are not right!
 acs.files = list.files(directories$acs,
                        full.names = T,
                        pattern = '*.dat',
@@ -191,11 +190,5 @@ acs = load.acs.files(acs.files)
 
 acs = cbind(Time = acs$Time, acs[,which(colnames(acs) != 'Time')])
 acs$V178 = NULL
-
-for (i in 2:ncol(acs)) { ## Insitu baseline correction
-  dd = quantile(acs[,i], na.rm = T, probs = 0.01)
-  message('In situ baseline of ', colnames(acs)[i], ' adjusted by ', round(dd*1e3) / 1e3)
-  acs[,i] = acs[,i] - dd
-}
 
 saveRDS(acs, file = paste0(directories$save, 'acs.rds'))
