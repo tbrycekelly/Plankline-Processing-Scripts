@@ -1,6 +1,3 @@
-library(data.table)
-library(archive)
-library(devtools)
 library(PlanklinePS)
 library(TheSource)
 

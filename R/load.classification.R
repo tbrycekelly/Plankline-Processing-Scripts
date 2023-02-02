@@ -1,8 +1,9 @@
+#' @title Load Classifications File (Plankline)
 #' @export
 load.classifications = function(file, verbose = T) {
   
   if (verbose) {message('Attempting to read file ', file)}
-  class.data = fread(file)
+  class.data = data.table::fread(file)
   
   if (verbose) { message('\tFound ', nrow(class.data), ' entries. Processing... ', appendLF = F)}
   

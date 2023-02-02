@@ -1,3 +1,4 @@
+#' @title Load LISST Files
 #' @export
 load.lisst.files = function(files, min.size = 1024, verbose = T) {
   message('Starting to load in files, ', length(files), ' files specified.')
@@ -16,13 +17,13 @@ load.lisst.files = function(files, min.size = 1024, verbose = T) {
   
   ## Load in first file.
   message(' Attempting to load file 1... ', appendLF = F)
-  dat = fread(files[1], fill = T, verbose = F, showProgress = F)
+  dat = data.table::fread(files[1], fill = T, verbose = F, showProgress = F)
   message('Done.')
   
   ## Read in rest of data
   for (i in 2:length(files)) {
     message(' Attempting to load file ', i, '... ', appendLF = F)
-    temp = fread(files[i], fill = T, verbose = F, showProgress = F)
+    temp = data.table::fread(files[i], fill = T, verbose = F, showProgress = F)
     
     if (ncol(temp) != ncol(dat)) {
       message('Invalid number of columns (', ncol(temp), ' vs ', ncol(dat), '), skipping.')
@@ -52,7 +53,7 @@ load.lisst.files = function(files, min.size = 1024, verbose = T) {
                     'Transmission', 'Attenuation')
   
   ## Make and sort by time
-  dat$Time = make.time(dat$Year, dat$Month, dat$Day, dat$Hour, dat$Minute, dat$Seconds, tz = 'GMT')
+  dat$Time = TheSource::make.time(dat$Year, dat$Month, dat$Day, dat$Hour, dat$Minute, dat$Seconds, tz = 'GMT')
   dat = dat[order(dat$Time),]
   
   message('Finished.')

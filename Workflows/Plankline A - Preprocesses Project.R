@@ -1,5 +1,3 @@
-library(data.table)
-library(archive)
 library(PlanklinePS)
 
 

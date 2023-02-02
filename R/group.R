@@ -1,3 +1,5 @@
+#' @title Consolidate count values
+#' @description A helper function to apply a function to column names (e.g. taxa). By default, it will sum all matching column names.
 #' @export
 group = function(bin, pattern = '*', fun = function(x){sum(x, na.rm = T)}, verbose = T) {
   l = grep(pattern = pattern, x = colnames(bin))

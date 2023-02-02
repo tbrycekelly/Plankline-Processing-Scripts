@@ -1,12 +1,9 @@
-library(data.table)
-library(archive)
-library(devtools)
 library(PlanklinePS)
 library(TheSource)
 
 ## Setup
 save.dir = '/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/'
-transects = readRDS('/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/transects.rdata')
+transects = readRDS('/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/transects.rds')
 
 #### MAPS
 
@@ -46,29 +43,31 @@ for (i in 1:length(transects)) {
   col = pals::alphabet(length(transects))[i]
   add.map.line(map, lon = transects[[i]]$Longitude, transects[[i]]$Latitude, greatCircle = F, col = col, lwd = 5)
   add.map.text(map,
-                text = i,
-                lon = mean(transects[[i]]$Longitude, na.rm = T),
-                lat = mean(transects[[i]]$Latitude, na.rm = T),
-                pos = 2,
-                col = col)
+               text = i,
+               lon = mean(transects[[i]]$Longitude, na.rm = T),
+               lat = mean(transects[[i]]$Latitude, na.rm = T),
+               pos = 2,
+               col = col)
 }
 dev.off()
+
+browseURL(paste0(save.dir, 'SKQ202210S Maps.pdf'))
 
 #### Build SECTIONS
 
 section = list()
 
 for (i in 1:length(transects)) {
-  message('Building section ', i, ' of ', length(transects), '...')
+  message(i)
   fields = names(transects[[i]])
   fields = fields[!fields %in% c('Distance', 'Depth')]
   section[[i]] = build.section(x = transects[[i]]$Distance,
                                y = transects[[i]]$Depth,  
                                z = transects[[i]][,fields],
                                field.names = fields,
-                               ylim = c(0,100),
-                               nx = 100,
-                               ny = 100,
+                               ylim = c(0,200),
+                               nx = 150,
+                               ny = 200,
                                y.factor = 10,
                                uncertainty = 1,
                                neighborhood = 20,
@@ -76,55 +75,24 @@ for (i in 1:length(transects)) {
                                lon = transects[[i]]$Longitude,
                                gridder = gridODV,
                                verbose = F)
-  
-  ## Derived sections (dz)
-  #section[[i]]$grid$dSigmadz = NA
-  
-}
-
-#### Save Data
-saveRDS(section, file = paste0(save.dir, 'section.rdata'))
-
-
-#### Plot Section Summaries
-
-add.section.bathy = function(section, bathy = bathy.global, binning = 1, bathy.col = 'darkgrey') {
-  
-  
-  ## Project lon/lat points
-  p = make.proj(lat = median(section$lat), lon = median(section$lon))
-  bathy$xy = rgdal::project(cbind(bathy$Lon, bathy$Lat), proj = p)
-  section$xy = rgdal::project(cbind(section$lon, section$lat), proj = p)
-  
-  ## Calculate depth via bilinear interpolation
-  depth = interp.bilinear(x = section$xy[,1], y = section$xy[,2], gx = bathy$xy[,1], gy = bathy$xy[,2], z = -as.numeric(bathy$Z))
-  
-  ## Filter
-  depth = runmed(depth, binning)
-  
-  ## Draw polygon
-  polygon(x = c(section$x, rev(section$x)), y = c(depth, rep(1e8, length(section$x))), col = bathy.col)
 }
 
 
 for (i in 1:length(transects)) {
-  pdf(paste0(save.dir, 'SKQ202210S Section Plots (transect ', i,').pdf'))
+  pdf(paste0(save.dir, 'Section Plots (transect ', i,').pdf'))
   par(mfrow = c(2,1))
   for (n in 1:ncol(section[[i]]$grid)) {
-    message(n)
     plot.section(section[[i]], field = n,
                  pal = 'inferno',
-                 ylim = c(100,0),
+                 ylim = c(200,0),
                  mark.points = F,
                  include.cex = 0.2,
                  ylab = 'Depth',
                  xlab = 'Section Distance',
                  main = paste0('Transect ', i, ' - ', names(section[[i]]$grid)[n]))
-    
-    #add.section.bathy(section[[i]])
   }
   
   dev.off()
 }
 
-
+browseURL(paste0(save.dir, 'Section Plots (transect ', 1,').pdf'))

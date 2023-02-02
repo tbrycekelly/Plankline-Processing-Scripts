@@ -1,3 +1,10 @@
+#' @title Pull Classification Category
+#' @description This function will extract images and generate an index file (morphocluster compatible) from a project directory.
+#' @param project.dir The file path to the desired project directory
+#' @param p The probability threshold for extracting classified images (0-1)
+#' @param out.dir The output directory to build the file structure (default: ./tmp)
+#' @param scratch The scratch directory to put temporary files (default: /tmp/pull)
+#' @author Thomas Bryce Kelly
 #' @export
 pull = function(project.dir, p = 0.5, out.dir = NULL, scratch = '/tmp/pull') {
   
@@ -74,7 +81,7 @@ pull = function(project.dir, p = 0.5, out.dir = NULL, scratch = '/tmp/pull') {
     index$object_id[i] = gsub('.png', '', name[[i]][length(name[[i]])])
   }
   
-  write.csv(index, file = paste0(out.dir, '/index.csv'), row.names = F)
+  utils::write.csv(index, file = paste0(out.dir, '/index.csv'), row.names = F)
   
   
   ## Done

@@ -1,4 +1,3 @@
-library(data.table)
 library(openxlsx)
 library(TheSource)
 library(PlanklinePS)

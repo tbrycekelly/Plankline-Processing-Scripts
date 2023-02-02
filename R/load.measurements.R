@@ -7,7 +7,7 @@ load.measurements = function(file.path, verbose = T) {
   f = paste0('./measurements/', f)
   
   ## Load the csv file from inside the archive
-  data = read.csv(archive::archive_read(archive = file.path, file = f))
+  data = utils::read.csv(archive::archive_read(archive = file.path, file = f))
   
   ## setup final data structure and then populate with data
   measurement.summary = data.frame(image = rep(NA, nrow(data)),
