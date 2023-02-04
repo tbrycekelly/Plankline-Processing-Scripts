@@ -3,7 +3,7 @@ load.measurements = function(file.path, verbose = T) {
   
   ## Get measurement file name
   f = strsplit(file.path, '/')[[1]]
-  f = gsub(pattern = '.tar.gz', replacement = '.csv', f[length(f)])
+  f = gsub(pattern = '.tar', replacement = '.csv', f[length(f)])
   f = paste0('./measurements/', f)
   
   ## Load the csv file from inside the archive

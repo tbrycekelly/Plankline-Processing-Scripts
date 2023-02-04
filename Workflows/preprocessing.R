@@ -1,6 +1,6 @@
 library(PlanklinePS)
 
-args = commandArgs(trailingOnly = TRUE)[1]
+args = commandArgs(trailingOnly = TRUE)
 
 ## parameters
 frame.rate = 20.5
@@ -13,7 +13,7 @@ file = tmp[length(tmp)]
 path = gsub(file, '', args[3])
 base.dir = gsub('/classification/', '', path)
 
-measure.file = paste0(base.dir, '/segmentation/', gsub('.csv', '.tar.gz', file))
+measure.file = paste0(base.dir, '/segmentation/', gsub('.csv', '.tar', file))
 
 
 out.dir = paste0(base.dir, '/R/')
