@@ -1,6 +1,7 @@
 library(PlanklinePS)
 
 args = commandArgs(trailingOnly = TRUE)
+args = c('1', '0.5', '/media/plankline/Data/Data/osu_test/classification/Camera3_VIPF-306-2022-07-21-22-36-51.647.csv')
 
 ## parameters
 frame.rate = 20.5
@@ -24,10 +25,10 @@ if (!dir.exists(out.dir)) {
   dir.create(paste0(out.dir, '/bin/'))
 }
 
-class = load.classifications(args[3])
+class = load.classifications(args[3], F)
 saveRDS(class, file = paste0(out.dir, '/classification/', class$image[1], ' classification.rds'))
 
-summary = load.measurements(measure.file)
+summary = load.measurements(measure.file, F)
 saveRDS(summary, file = paste0(out.dir, '/measurement/', summary$image[1], ' measurement.rds'))
 
 
