@@ -1,8 +1,6 @@
 library(PlanklinePS)
 
 args = commandArgs(trailingOnly = TRUE)
-args = c('1', '0.5', '/media/plankline/Data/Data/osu_test/classification/Camera3_VIPF-306-2022-07-21-22-36-51.647.csv')
-
 ## parameters
 frame.rate = 20.5
 bin.width = as.numeric(args[1]) # second(s)
