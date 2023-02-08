@@ -1,6 +1,6 @@
 
 #' @export
-process.measurements = function(base.dir, out.dir) {
+process.measurements = function(base.dir, out.dir, frame.rate = 20.5) {
   
   measure.file = list.files(path = paste0(base.dir, '/segmentation/'),
                             pattern = '.tar',
@@ -15,7 +15,7 @@ process.measurements = function(base.dir, out.dir) {
     message('Processing measurement file ', i, ' of ', length(measure.file), ' (', round(i*100/length(measure.file)), '%)')
     
     ## Load file
-    summary = load.measurements(measure.file[i], verbose = F)
+    summary = load.measurements(measure.file[i], frame.rate = frame.rate, verbose = F)
     
     ## Save summary file
     saveRDS(summary, file = paste0(out.dir, '/measurement/', summary$image[1], ' measurement.rds'))

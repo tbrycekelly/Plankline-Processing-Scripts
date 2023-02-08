@@ -1,6 +1,6 @@
 #' @title Load Classifications File (Plankline)
 #' @export
-load.classifications = function(file, verbose = T) {
+load.classifications = function(file, frame.rate = 20.5, verbose = T) {
   
   if (verbose) {message('Attempting to read file ', file)}
   class.data = data.table::fread(file)

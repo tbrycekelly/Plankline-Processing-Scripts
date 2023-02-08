@@ -1,5 +1,5 @@
 #' @export
-load.measurements = function(file.path, verbose = T) {
+load.measurements = function(file.path, frame.rate = 20.5, verbose = T) {
   
   ## Get measurement file name
   f = strsplit(file.path, '/')[[1]]

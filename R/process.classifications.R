@@ -1,5 +1,5 @@
 #' @export
-process.classifications = function(base.dir, out.dir) {
+process.classifications = function(base.dir, out.dir, frame.rate = 20.5) {
 
   #### Classification files
   # In this script, we will load data from each classification file, parse it into a summary data structure, and then save the results to an RDS file
@@ -26,7 +26,7 @@ process.classifications = function(base.dir, out.dir) {
     
     for (i in 1:length(class.file)) {
       ## Load file
-      class.summary = load.classifications(class.file[i])
+      class.summary = load.classifications(class.file[i], frame.rate = frame.rate)
         
       ## Save summary file
       saveRDS(class.summary, file = paste0(out.dir, '/classification/', class.summary$image[1], ' classification.rds'))
