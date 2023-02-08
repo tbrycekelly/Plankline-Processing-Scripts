@@ -3,7 +3,7 @@
 process.measurements = function(base.dir, out.dir) {
   
   measure.file = list.files(path = paste0(base.dir, '/segmentation/'),
-                            pattern = '*.tar.gz',
+                            pattern = '.tar',
                             full.names = T)
   
   #### Preprocess measurement files here:
