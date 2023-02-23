@@ -40,7 +40,7 @@ load.suna.files = function(files, skip = 21, min.size = 1024, verbose = T) {
   }
   
   ## Make and sort by time
-  dat$Time = as.POSIXct(dat$Time, origin = TheSource::make.time(1904))
+  dat$Time = conv.time.unix(dat$Time)
   dat = dat[order(dat$Time),]
   
   message('Finished.')
