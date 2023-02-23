@@ -4,7 +4,7 @@
 \alias{load.classifications}
 \title{Load Classifications File (Plankline)}
 \usage{
-load.classifications(file, verbose = T)
+load.classifications(file, frame.rate = 20.5, verbose = T)
 }
 \description{
 Load Classifications File (Plankline)
