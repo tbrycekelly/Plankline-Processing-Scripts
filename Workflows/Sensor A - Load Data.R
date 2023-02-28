@@ -18,6 +18,7 @@ directories = list(
   eng = paste0(root.dir, 'VIPF_LOGS/Inclinometer Publisher/'),
   lisst = paste0(root.dir, 'LISST/'),
   acs = paste0(root.dir, 'ACS/'),
+  suna = paste0(root.dir, 'SUNA/'),
   save = paste0(root.dir, '/_rdata/')
 )
 
@@ -191,3 +192,15 @@ acs = cbind(Time = acs$Time, acs[,which(colnames(acs) != 'Time')])
 acs$V178 = NULL
 
 saveRDS(acs, file = paste0(directories$save, 'acs.rds'))
+
+
+#### SUNA
+suna.files = list.files(directories$suna,
+                       full.names = T,
+                       pattern = '*.sbslog',
+                       recursive = T)
+suna = load.suna.files(suna.files, skip = 15, min.size = 250000)
+suna = suna[suna$Time > make.time(2022),]
+suna$Time = suna$Time - 86400
+
+saveRDS(suna, file = paste0(directories$save, 'suna.rds'))

@@ -1,6 +1,21 @@
 library(PlanklinePS)
 library(TheSource)
 
+bin = function(x, y, xout, func = function (x) {mean(x, na.rm = T)}) {
+  yout = rep(NA, length(xout))
+  
+  for (i in 1:length(xout)) {
+    l = x == xout[i]
+    if (sum(l) > 0) {
+      yout[i] = func(y[l])
+    }
+  }
+  
+  yout
+}
+
+
+
 base.dir = '/media/plankline/Data/Data/SNR10/'
 transects = readRDS('/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/transects.rds')
 transect.times = sapply(c(1:length(transects)), function(x) {mean(transects[[x]]$Time, na.rm = T)})

@@ -13,6 +13,7 @@ fluoro1 = readRDS(paste0(save.dir, 'fluorometer1.rds'))
 fluoro2 = readRDS(paste0(save.dir, 'fluorometer2.rds'))
 analog = readRDS(paste0(save.dir, 'analog.rds'))
 acs = readRDS(paste0(save.dir, 'acs.rds'))
+suna = readRDS(paste0(save.dir, 'suna.rds'))
 
 ## bin time
 
@@ -26,6 +27,7 @@ fluoro1$Time = conv.time.unix(round(as.numeric(fluoro1$Time) * dt) / dt)
 fluoro2$Time = conv.time.unix(round(as.numeric(fluoro2$Time) * dt) / dt)
 analog$Time = conv.time.unix(round(as.numeric(analog$Time) * dt) / dt)
 acs$Time = conv.time.unix(round(as.numeric(acs$Time) * dt) / dt)
+suna$Time = conv.time.unix(round(as.numeric(suna$Time) * dt) / dt)
 
 ## Merging
 dpi = data.frame(Time = unique(gps$Time))
@@ -66,6 +68,10 @@ for (n in names(eng)[2:6]) {
 dpi[['a440']] = approx(as.numeric(acs$Time), acs$A440, xout = as.numeric(dpi$Time), ties = mean)$y
 dpi[['a675']] = approx(as.numeric(acs$Time), acs$A675.8, xout = as.numeric(dpi$Time), ties = mean)$y
 
+## SUNA
+for (n in names(suna)[-1]) {
+  dpi[[n]] = approx(as.numeric(suna$Time), suna[[n]], xout = as.numeric(dpi$Time), ties = mean)$y
+}
 
 
 #### Filter
