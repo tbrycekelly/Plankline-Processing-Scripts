@@ -1,23 +1,8 @@
 library(PlanklinePS)
 library(TheSource)
 
-bin = function(x, y, xout, func = function (x) {mean(x, na.rm = T)}) {
-  yout = rep(NA, length(xout))
-  
-  for (i in 1:length(xout)) {
-    l = x == xout[i]
-    if (sum(l) > 0) {
-      yout[i] = func(y[l])
-    }
-  }
-  
-  yout
-}
-
-
-
-base.dir = '/media/plankline/Data/Data/SNR10/'
-transects = readRDS('/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/transects.rds')
+base.dir = '/media/plankline/Data/Data/2022-07-22_13-39-05.528.Done/'
+transects = readRDS('/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/transects.rdata')
 transect.times = sapply(c(1:length(transects)), function(x) {mean(transects[[x]]$Time, na.rm = T)})
 
 #### Compile merged classification/sensor package dataset
@@ -82,79 +67,18 @@ saveRDS(comp, file = paste0(base.dir, '/R/Zooplankton Compilation.rds'))
   pdf(paste0(base.dir, '/R/Sample Plots.pdf'))
   par(mfrow = c(2,2))
   
-  plot(x = comp$time,
-       y = comp$Depth,
-       col = make.pal(log10(comp$copepod_cyclopoid_oithona), min = 0, max = 1, pal = 'parula'),
-       pch = 20,
-       ylim = c(120,0),
-       yaxs = 'i')
+  for (n in groups) {
+    z = log10(group(comp, n))
+    zlim = quantile(z, probs = c(0.02, 0.98), na.rm = T)
+    plot(x = comp$time,
+         y = comp$Depth,
+         col = make.pal(z, min = 0, max = zlim[2], pal = 'parula'),
+         pch = '.',
+         ylim = rev(range(pretty(comp$Depth))),
+         yaxs = 'i',
+         main = paste('log', n))
+  }
   
-  plot(x = comp$time,
-       y = comp$Depth,
-       col = make.pal(log10(group(comp, 'copepod_')), min = 0, max = 1.5, pal = 'parula'),
-       pch = 20,
-       ylim = c(120,0),
-       yaxs = 'i')
-  
-  plot(x = comp$time,
-       y = comp$Depth,
-       col = make.pal(group(comp, 'copepod_'), min = 0, max = 20, pal = 'parula'),
-       pch = 20,
-       ylim = c(120,0),
-       yaxs = 'i')
-  
-  
-  plot(x = comp$time,
-       y = comp$Depth,
-       col = make.pal(comp$Temperature, pal = 'parula'),
-       pch = 20,
-       ylim = c(120,0),
-       yaxs = 'i')
-  
-  plot(x = comp$time,
-       y = comp$Depth,
-       col = make.pal(comp$SigmaTheta, pal = 'parula'),
-       pch = 20,
-       ylim = c(120,0),
-       yaxs = 'i')
-  
-  plot(x = comp$time,
-       y = comp$Depth,
-       col = make.pal(comp$frames, pal = 'parula'),
-       pch = 20,
-       ylim = c(120,0),
-       yaxs = 'i')
-  
-  
-  plot(x = comp$time,
-       y = comp$Depth,
-       col = make.pal(group(comp, 'unknown'), pal = 'parula', min = 0, max = 10),
-       pch = 20,
-       ylim = c(120,0),
-       yaxs = 'i')
-  
-  plot(x = comp$time,
-       y = comp$Depth,
-       col = make.pal(group(comp, 'appendicularian_'), pal = 'parula', min = 0, max = 5),
-       pch = 20,
-       ylim = c(120,0),
-       yaxs = 'i')
-  
-  
-  plot(x = comp$time,
-       y = comp$Depth,
-       col = make.pal(group(comp, 'protist_'), pal = 'parula', min = 0, max = 1),
-       pch = 20,
-       ylim = c(120,0),
-       yaxs = 'i')
-  
-  
-  plot(x = comp$time,
-       y = comp$Depth,
-       col = make.pal(group(comp, 'detritus_'), pal = 'parula', min = 0, max = 100),
-       pch = 20,
-       ylim = c(120,0),
-       yaxs = 'i')
   
   
   plot(log10(comp$Chl[comp$Depth < 20]),
@@ -165,13 +89,16 @@ saveRDS(comp, file = paste0(base.dir, '/R/Zooplankton Compilation.rds'))
        ylab = 'Copepods',
        xlab = 'Chl',
        xaxt = 'n',
-       yaxt = 'n')
+       yaxt = 'n',
+       main = 'Surface 20m')
   
   add.log.axis(1)
   add.log.axis(2)
   
   dev.off()
 }
+
+browseURL(paste0(base.dir, '/R/Sample Plots.pdf'))
 
 ## Start preliminary plot
 colnames(comp) = paste0(colnames(comp), '_')

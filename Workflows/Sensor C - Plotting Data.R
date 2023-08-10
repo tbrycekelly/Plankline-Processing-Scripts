@@ -3,7 +3,7 @@ library(TheSource)
 
 ## Setup
 save.dir = '/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/'
-transects = readRDS('/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/transects.rds')
+transects = readRDS('/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/transects.rdata')
 
 #### MAPS
 
@@ -52,6 +52,23 @@ for (i in 1:length(transects)) {
 dev.off()
 
 browseURL(paste0(save.dir, 'SKQ202210S Maps.pdf'))
+
+
+for (i in 1:length(transects)) {
+  pdf(paste0(save.dir, 'Section Plots Preliminary (transect ', 1,').pdf'))
+  par(mfrow = c(2,2))
+  
+  for (j in 1:ncol(transects[[i]])) {
+    plot(transects[[i]]$Latitude, transects[[i]]$Depth,
+         pch = '.',
+         col = make.pal(transects[[i]][[j]], pal = 'inferno'),
+         ylim = c(100, 0),
+         main = names(transects[[i]])[j])
+  }
+  
+  dev.off()
+  browseURL(paste0(save.dir, 'Section Plots Preliminary (transect ', 1,').pdf'))
+}
 
 #### Build SECTIONS
 

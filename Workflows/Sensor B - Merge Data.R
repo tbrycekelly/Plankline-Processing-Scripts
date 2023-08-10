@@ -2,6 +2,19 @@ library(openxlsx)
 library(geosphere) # for distance calculations
 library(PlanklinePS)
 
+bin = function(x, y, xout, func = function (x) {mean(x, na.rm = T)}) {
+  yout = rep(NA, length(xout))
+  
+  for (i in 1:length(xout)) {
+    l = x == xout[i]
+    if (sum(l) > 0) {
+      yout[i] = func(y[l])
+    }
+  }
+  
+  yout
+}
+
 ## Setup
 save.dir = '/media/plankline/Data/Sensor/SKQJ2022_data/_rdata/'
 
@@ -17,17 +30,17 @@ suna = readRDS(paste0(save.dir, 'suna.rds'))
 
 ## bin time
 
-dt = 1 #seconds
+dt = 2 #seconds
 
-gps$Time = conv.time.unix(round(as.numeric(gps$Time) * dt) / dt)
-ctd1$Time = conv.time.unix(round(as.numeric(ctd1$Time) * dt) / dt)
-ctd2$Time = conv.time.unix(round(as.numeric(ctd2$Time) * dt) / dt)
-eng$Time = conv.time.unix(round(as.numeric(eng$Time) * dt) / dt)
-fluoro1$Time = conv.time.unix(round(as.numeric(fluoro1$Time) * dt) / dt)
-fluoro2$Time = conv.time.unix(round(as.numeric(fluoro2$Time) * dt) / dt)
-analog$Time = conv.time.unix(round(as.numeric(analog$Time) * dt) / dt)
-acs$Time = conv.time.unix(round(as.numeric(acs$Time) * dt) / dt)
-suna$Time = conv.time.unix(round(as.numeric(suna$Time) * dt) / dt)
+gps$Time = conv.time.unix(round(as.numeric(gps$Time) / dt) * dt)
+ctd1$Time = conv.time.unix(round(as.numeric(ctd1$Time) / dt) * dt)
+ctd2$Time = conv.time.unix(round(as.numeric(ctd2$Time) / dt) * dt)
+eng$Time = conv.time.unix(round(as.numeric(eng$Time) / dt) * dt)
+fluoro1$Time = conv.time.unix(round(as.numeric(fluoro1$Time) / dt) * dt)
+fluoro2$Time = conv.time.unix(round(as.numeric(fluoro2$Time) / dt) * dt)
+analog$Time = conv.time.unix(round(as.numeric(analog$Time) / dt) * dt)
+acs$Time = conv.time.unix(round(as.numeric(acs$Time) / dt) * dt)
+suna$Time = conv.time.unix(round(as.numeric(suna$Time) / dt) * dt)
 
 ## Merging
 dpi = data.frame(Time = unique(gps$Time))
@@ -53,10 +66,10 @@ for (n in names(analog)[2:5]) {
 
 ##Fluorometer
 for (n in names(fluoro1)[c(3,5,7)]) {
-  dpi[[n]] = approx(as.numeric(fluoro1$Time), fluoro1[[n]], xout = as.numeric(dpi$Time), ties = mean)$y
+  dpi[[n]] = approx(as.numeric(fluoro1$Time), fluoro1[[n]], xout = as.numeric(dpi$Time), ties = median)$y
 }
 for (n in names(fluoro2)[c(3,5,7)]) {
-  dpi[[n]] = approx(as.numeric(fluoro2$Time), fluoro2[[n]], xout = as.numeric(dpi$Time), ties = mean)$y
+  dpi[[n]] = approx(as.numeric(fluoro2$Time), fluoro2[[n]], xout = as.numeric(dpi$Time), ties = median)$y
 }
 
 ## ENG
@@ -65,12 +78,12 @@ for (n in names(eng)[2:6]) {
 }
 
 ## ACs
-dpi[['a440']] = approx(as.numeric(acs$Time), acs$A440, xout = as.numeric(dpi$Time), ties = mean)$y
-dpi[['a675']] = approx(as.numeric(acs$Time), acs$A675.8, xout = as.numeric(dpi$Time), ties = mean)$y
+dpi[['a440']] = approx(as.numeric(acs$Time), acs$A440, xout = as.numeric(dpi$Time), ties = median)$y
+dpi[['a675']] = approx(as.numeric(acs$Time), acs$A675.8, xout = as.numeric(dpi$Time), ties = median)$y
 
 ## SUNA
 for (n in names(suna)[-1]) {
-  dpi[[n]] = approx(as.numeric(suna$Time), suna[[n]], xout = as.numeric(dpi$Time), ties = mean)$y
+  dpi[[n]] = approx(as.numeric(suna$Time), suna[[n]], xout = as.numeric(dpi$Time), ties = median)$y
 }
 
 
