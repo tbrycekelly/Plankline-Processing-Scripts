@@ -6,14 +6,9 @@
 #' @param scratch The scratch directory to put temporary files (default: /tmp/pull)
 #' @author Thomas Bryce Kelly
 #' @export
-pull = function(project.dir, p = 0.5, out.dir = NULL, scratch = '/tmp/pull') {
+pull = function(seg.dir, class.dir, out.dir, p = 0.5, scratch = '/tmp/pull') {
   
   ## Setup output folder for image files
-  if (is.null(out.dir)) {
-    out.dir = paste0(project.dir, '/tmp/')
-    if (!dir.exists(out.dir)) { dir.create(out.dir)}
-    message('No output directory given, saving to: ', out.dir)
-  }
   
   if (!dir.exists(scratch)) {
     message('Creating scartch directory.')
@@ -22,29 +17,33 @@ pull = function(project.dir, p = 0.5, out.dir = NULL, scratch = '/tmp/pull') {
     stop('Scratch directory exists, must not exist for data protection! Dir = ', scratch)
   }
   
+  if (!dir.exists(out.dir)) {
+    message('Creating output directory.')
+    dir.create(out.dir)
+  }
   
   count = 0
   a = Sys.time() # Timer
   
   ## Load each classification file, identify target files, extract if desired
-  class.files = list.files(paste0(project.dir, '/classification/'), pattern = '.csv', full.names = T)
+  class.files = list.files(class.dir, pattern = '.csv', full.names = T)
   
   for (i in 1:length(class.files)) {
     message('Reading csv ', i, ' of ', length(class.files), '...')
-    data = fread(class.files[i])
+    data = data.table::fread(class.files[i])
     
     message('Extracting TAR file to temporary directory...')
-    tar.file = gsub('.csv', '.tar', gsub('classification', 'segmentation', class.files[i]))
-    tar.file = strsplit(tar.file, '-')[[1]]
-    tar.file = paste0(paste0(tar.file[1:(length(tar.file)-3)], collapse = '-'), '.tar')
+    tar.file = gsub('.csv', '.tar', basename(class.files[i]))
+    tar.file = paste0(seg.dir, '/', tar.file)
     
     if (file.exists(tar.file)) {
-      system(paste0('tar -xf ', tar.file, ' -C ', scratch, ' --strip-components=4 --wildcards "*.png"'))
+      system(paste0('tar -xf "', tar.file, '" -C ', scratch, ' --strip-components=4 --wildcards "*.png"'))
     } else {
       stop('No matching Tar file found!')
     }
     
     paths = strsplit(data$image, '/')
+    copied = rep(F, nrow(data))
     for (taxa in colnames(data)[-1]) {
       l = which(data[[taxa]] > p)
       
@@ -52,19 +51,21 @@ pull = function(project.dir, p = 0.5, out.dir = NULL, scratch = '/tmp/pull') {
         if (!dir.exists(paste0(out.dir, '/', taxa))) {
           dir.create(paste0(out.dir, '/', taxa))
         }
+        copied[l] = T
         
         for (k in l) {
           count = count + 1
           file.copy(from = paste0(scratch, '/', paths[[k]][length(paths[[k]])]), to = paste0(out.dir, '/', taxa))
-          file.remove(paste0(scratch, '/', paths[[k]][length(paths[[k]])]))
+          #file.remove(paste0(scratch, '/', paths[[k]][length(paths[[k]])]))
         }
       }
     }
     
     ## Copy over whatever files are left (unclassified objects)
     if (!dir.exists(paste0(out.dir, '/_unsorted/'))) {dir.create(paste0(out.dir, '/_unsorted/'))}
-    orphan = list.files(scratch, pattern = '*.png', full.names = T)
-    file.copy(from = orphan, to = gsub(scratch, paste0(out.dir, '/_unsorted/'), orphan))
+    for (k in which(!copied)) {
+      file.copy(from = paste0(scratch, '/', paths[[k]][length(paths[[k]])]), to = paste0(out.dir, '/_unsorted/'))
+    }
     
     file.remove(list.files(scratch, pattern = '*', full.names = T))
   }
@@ -73,15 +74,15 @@ pull = function(project.dir, p = 0.5, out.dir = NULL, scratch = '/tmp/pull') {
   
   
   ## Make morphocluster index
-  images = list.files(path = out.dir, recursive = T, pattern = '*.png', full.names = F)
-  name = strsplit(images, split = '/')
-  index = data.frame(object_id = NA, path = images)
+  #images = list.files(path = out.dir, recursive = T, pattern = '*.png', full.names = F)
+  #name = strsplit(images, split = '/')
+  #index = data.frame(object_id = NA, path = images)
   
-  for (i in 1:nrow(index)) {
-    index$object_id[i] = gsub('.png', '', name[[i]][length(name[[i]])])
-  }
+  #for (i in 1:nrow(index)) {
+  #  index$object_id[i] = gsub('.png', '', name[[i]][length(name[[i]])])
+  #}
   
-  utils::write.csv(index, file = paste0(out.dir, '/index.csv'), row.names = F)
+  #utils::write.csv(index, file = paste0(out.dir, '/index.csv'), row.names = F)
   
   
   ## Done
