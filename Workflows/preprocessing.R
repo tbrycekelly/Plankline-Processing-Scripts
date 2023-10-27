@@ -1,15 +1,23 @@
 library(PlanklinePS)
+library(ini)
 
 args = commandArgs(trailingOnly = TRUE)
+config = ini::read.ini(args[1])
+path = args[2]
+
+if (!'dt' %in% names(config$R) | !'p_threshold' %in% names(config$R)) {
+  stop('Config file is missing a required parameter for preprocessing.')
+}
+
 ## parameters
 frame.rate = 20.5
-bin.width = as.numeric(args[1]) # second(s)
-p.threshold = as.numeric(args[2]) # probability threshold
+bin.width = as.numeric(config$R$dt) # second(s)
+p.threshold = as.numeric(config$R$p_threshold) # probability threshold
 
 ## File names
-tmp = strsplit(x = args[3], split = '/')[[1]]
+tmp = strsplit(x = path, split = '/')[[1]]
 file = tmp[length(tmp)]
-path = gsub(file, '', args[3])
+path = gsub(file, '', path)
 base.dir = gsub('/classification/', '', path)
 
 measure.file = paste0(base.dir, '/segmentation/', gsub('.csv', '.tar', file))
@@ -23,7 +31,7 @@ if (!dir.exists(out.dir)) {
   dir.create(paste0(out.dir, '/bin/'))
 }
 
-class = load.classifications(args[3], F)
+class = load.classifications(path, F)
 saveRDS(class, file = paste0(out.dir, '/classification/', class$image[1], ' classification.rds'))
 
 summary = load.measurements(measure.file, F)
