@@ -15,9 +15,9 @@ if (!dir.exists(out.dir)) { dir.create(out.dir)}
 process.classifications(base.dir = base.dir,
                         out.dir = out.dir)
     
-process.measurements(base.dir = base.dir,
-                     out.dir = out.dir,
-                     frame.rate = frame.rate)
+#process.measurements(base.dir = base.dir,
+#                     out.dir = out.dir,
+#                     frame.rate = frame.rate)
     
 generate.bin(out.dir = out.dir,
              p.threshold = p.threshold,
